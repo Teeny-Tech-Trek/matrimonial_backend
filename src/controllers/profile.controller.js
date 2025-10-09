@@ -57,13 +57,27 @@ export const getMyProfile = async (req, res) => {
 export const listProfiles = async (req, res) => {
   try {
     const filters = req.query;
-    const profiles = await getAllProfiles(filters);
-    res.status(200).json({ success: true, count: profiles.length, data: profiles });
+
+    // Fetch filtered profiles
+    const result = await getAllProfiles(filters);
+
+    res.status(200).json({
+      success: true,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      pages: result.pages,
+      count: result.data.length,
+      data: result.data,
+    });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    console.error("Error in listProfiles:", err);
+    res.status(400).json({
+      success: false,
+      error: err.message || "Something went wrong while fetching profiles.",
+    });
   }
 };
-
 /**
  * Delete My Profile
  */
