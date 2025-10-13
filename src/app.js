@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth.route.js";
 import profileRoutes from "./routes/profile.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import requestRoutes from "./routes/request.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 
 dotenv.config();
@@ -28,6 +29,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/request", requestRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 
 export default app;
