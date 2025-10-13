@@ -13,7 +13,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // ✅ no https for local frontend
+    origin: "https://rsaristomatch.com", // ✅ no https for local frontend
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
