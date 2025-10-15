@@ -58,6 +58,7 @@ export const registerUser = async (data) => {
       gender: user.gender,
       dateOfBirth: user.dateOfBirth,
       profileCreatedFor: user.profileCreatedFor,
+       role:user.role,
     },
   };
 };
@@ -76,6 +77,7 @@ export const loginUser = async (phoneNumber, password) => {
       id: user._id,
       fullName: user.fullName,
       phoneNumber: user.phoneNumber,
+      role:user.role,
     },
   };
 };
