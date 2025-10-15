@@ -6,6 +6,7 @@ import profileRoutes from "./routes/profile.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import requestRoutes from "./routes/request.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import adminRoutes from "./routes/dashboard.routes.js";
 
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/request", requestRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use("/api/admin", adminRoutes);
 
 
 export default app;

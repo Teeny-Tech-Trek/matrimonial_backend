@@ -1,17 +1,18 @@
+// models/auth.model.js
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
-const userSchema = new mongoose.Schema(
-  {
-    fullName: { type: String, required: true },
-    phoneNumber: { type: String, required: true, unique: true },
-    gender: { type: String, enum: ["male", "female"], required: true },
-    dateOfBirth: { type: Date, required: true },
-    profileCreatedFor: { type: String, required: true },
-    password: { type: String, required: true },
-  },
-  { timestamps: true }
-);
+const userSchema = new mongoose.Schema({
+  fullName: { type: String, required: true },
+  phoneNumber: { type: String, required: true, unique: true },
+  gender: { type: String, enum: ["male", "female", "other"], required: true },
+  dateOfBirth: { type: Date, required: true },
+  profileCreatedFor: { type: String, required: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ["user", "moderator", "admin"], default: "user" }, // <-- role
+  avatar: { type: String }, // optional avatar URL
+  isActive: { type: Boolean, default: true }, // soft-delete flag
+}, { timestamps: true });
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
