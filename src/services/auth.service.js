@@ -4,7 +4,6 @@ import { OAuth2Client } from "google-auth-library";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-
 export const googleLoginUser = async (idToken) => {
   // Verify Google token
   const ticket = await client.verifyIdToken({
@@ -58,7 +57,7 @@ export const registerUser = async (data) => {
       gender: user.gender,
       dateOfBirth: user.dateOfBirth,
       profileCreatedFor: user.profileCreatedFor,
-       role:user.role,
+      role: user.role,
     },
   };
 };
@@ -77,7 +76,8 @@ export const loginUser = async (phoneNumber, password) => {
       id: user._id,
       fullName: user.fullName,
       phoneNumber: user.phoneNumber,
-      role:user.role,
+      role: user.role,
+      gender: user.gender,
     },
   };
 };
