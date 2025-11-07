@@ -11,13 +11,23 @@ import adminRoutes from "./routes/admin.routes.js";
 dotenv.config();
 const app = express();
 
+const allowedOrigins = [
+  "https://rsaristomatch.com",
+  "https://www.rsaristomatch.com",
+];
+
 app.use(
   cors({
-    origin: ["https://rsaristomatch.com", "https://www.rsaristomatch.com"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// ✅ Important: handle preflight requests
+app.options("*", cors());
+
 
 app.use(express.json());
 
