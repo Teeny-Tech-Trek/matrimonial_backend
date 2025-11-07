@@ -11,22 +11,29 @@ import adminRoutes from "./routes/admin.routes.js";
 dotenv.config();
 const app = express();
 
-const allowedOrigins = [
-  "https://rsaristomatch.com",
-  "https://www.rsaristomatch.com",
-];
-
 app.use(
   cors({
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "https://rsaristomatch.com",
+        "https://www.rsaristomatch.com",
+      ];
+
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, origin); // ✅ send that exact origin back
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
 
-// ✅ Important: handle preflight requests
+// ✅ Must stay below CORS middleware
 app.options("*", cors());
+
 
 
 app.use(express.json());
