@@ -13,7 +13,7 @@ export const submitContactForm = async (req, res) => {
 
     res.status(200).json({ success: true, message: "Message sent successfully" });
   } catch (error) {
-    console.error("Error sending contact form:", error);
-    res.status(500).json({ error: "Failed to send message" });
+    console.error("Error in contact form submission:", error.message);
+    res.status(500).json({ error: error.message || "Failed to send message" });
   }
 };

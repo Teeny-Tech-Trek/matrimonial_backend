@@ -32,8 +32,7 @@ app.use(
   })
 );
 
-// ✅ Must stay below CORS middleware
-app.options("*", cors());
+
 
 
 
