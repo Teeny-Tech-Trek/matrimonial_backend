@@ -8,30 +8,37 @@ import requestRoutes from "./routes/request.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
 
 dotenv.config();
 const app = express();
 
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     const allowedOrigins = [
+//       "https://rsaristomatch.com",
+//       "https://www.rsaristomatch.com",
+//       "http://localhost:5173",
+//     ];
+
+//     if (!origin) return callback(null, true);
+
+//     if (allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true,
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+// }));
+
 app.use(
   cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = [
-        "https://rsaristomatch.com",
-        "https://www.rsaristomatch.com",
-      ];
-
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, origin); // ✅ send that exact origin back
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: "http://localhost:5173",
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
-
 
 
 
@@ -49,6 +56,7 @@ app.use("/api/request", requestRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", contactRoutes);
+app.use("/api", uploadRoutes);
 
 export default app;
 
