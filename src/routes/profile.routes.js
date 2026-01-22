@@ -20,9 +20,8 @@
 // router.get("/:id", getProfile);                      // Get specific profile
 
 // export default router;
-
 import express from "express";
-import { authenticate } from "../middlewares/auth.middleware.js";
+import { protect } from "../middlewares/auth.middleware.js"; // Changed from authenticate to protect
 import {
   saveProfile,
   getProfile,
@@ -33,12 +32,11 @@ import {
 
 const router = express.Router();
 
-// Add this route BEFORE the /:id route
-router.get("/me", authenticate, getMyProfile);
-
-router.post("/", authenticate, saveProfile);
+// IMPORTANT: /me must come BEFORE /:id
+router.get("/me", protect, getMyProfile);
+router.post("/", protect, saveProfile);
 router.get("/:id", getProfile);
 router.get("/", listProfiles);
-router.delete("/", authenticate, removeProfile);
+router.delete("/", protect, removeProfile);
 
 export default router;
