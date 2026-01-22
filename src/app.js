@@ -14,6 +14,7 @@
 // app.use(
 //   cors({
 //     origin: ["https://rsaristomatch.com", "https://www.rsaristomatch.com"],
+//     origin: ["https://rsaristomatch.com", "https://www.rsaristomatch.com"],
 //     methods: ["GET", "POST", "PUT", "DELETE"],
 //     credentials: true,
 //   })
@@ -54,23 +55,29 @@ const app = express();
 //     credentials: true,
 //   })
 // );
-const allowedOrigins =
-  process.env.NODE_ENV === "production"
-    ? ["https://rsaristomatch.com"]
-    : [
-        "https://rsaristomatch.com",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:3000",
-      ];
+const allowedOrigins = [
+  "https://rsaristomatch.com",
+  "https://www.rsaristomatch.com",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000",
+];
 
 app.use(
   cors({
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // allow Postman / server calls
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
+
 
 app.use(express.json());
 
@@ -86,3 +93,56 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/admin", adminRoutes);
 
 export default app;
+
+// import express from "express";
+// import dotenv from "dotenv";
+// import cors from "cors";
+// import authRoutes from "./routes/auth.route.js";
+// import profileRoutes from "./routes/profile.routes.js";
+// import messageRoutes from "./routes/message.routes.js";
+// import requestRoutes from "./routes/request.routes.js";
+// import dashboardRoutes from "./routes/dashboard.routes.js";
+// import adminRoutes from "./routes/admin.routes.js";
+
+// dotenv.config();
+// const app = express();
+
+// // app.use(
+// //   cors({
+// //     origin: "https://rsaristomatch.com", // ✅ no https for local frontend
+// //     methods: ["GET", "POST", "PUT", "DELETE"],
+// //     credentials: true,
+// //   })
+// // );
+// const allowedOrigins =
+//   process.env.NODE_ENV === "production"
+//     ? ["https://rsaristomatch.com"]
+//     : [
+//         "https://rsaristomatch.com",
+//         "http://localhost:5173",
+//         "http://localhost:5174",
+//         "http://localhost:3000",
+//       ];
+
+// app.use(
+//   cors({
+//     origin: allowedOrigins,
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//     credentials: true,
+//   })
+// );
+
+// app.use(express.json());
+
+// app.get("/", (req, res) => {
+//   res.send("Matrimonial API is running...");
+// });
+
+// app.use("/api/auth", authRoutes);
+// app.use("/api/profile", profileRoutes);
+// app.use("/api/messages", messageRoutes);
+// app.use("/api/request", requestRoutes);
+// app.use("/api/dashboard", dashboardRoutes);
+// app.use("/api/admin", adminRoutes);
+
+// export default app;

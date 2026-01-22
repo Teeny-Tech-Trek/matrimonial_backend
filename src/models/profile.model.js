@@ -1,9 +1,21 @@
 import mongoose from "mongoose";
 
+// const photoSchema = new mongoose.Schema({
+//   photoUrl: { type: String, required: true },
+//   status: { type: String, enum: ["approved", "pending", "rejected"], default: "pending" }
+// });
 const photoSchema = new mongoose.Schema({
   photoUrl: { type: String, required: true },
-  status: { type: String, enum: ["approved", "pending", "rejected"], default: "pending" }
+  s3Key: { type: String, required: true },
+  status: {
+    type: String,
+    enum: ["approved", "pending", "rejected"],
+    default: "pending",
+  },
+  isPrimary: { type: Boolean, default: false },
+  uploadedAt: { type: Date, default: Date.now },
 });
+
 
 const educationSchema = new mongoose.Schema({
   highestEducation: String,
