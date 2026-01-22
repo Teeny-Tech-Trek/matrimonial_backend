@@ -21,7 +21,7 @@
 
 // export default router;
 import express from "express";
-import { protect } from "../middlewares/auth.middleware.js"; // Changed from authenticate to protect
+import { protect } from "../middlewares/auth.middleware.js"; // Use protect instead of authenticate
 import {
   saveProfile,
   getProfile,
@@ -32,11 +32,12 @@ import {
 
 const router = express.Router();
 
-// IMPORTANT: /me must come BEFORE /:id
-router.get("/me", protect, getMyProfile);
-router.post("/", protect, saveProfile);
-router.get("/:id", getProfile);
-router.get("/", listProfiles);
-router.delete("/", protect, removeProfile);
+// IMPORTANT: Specific routes BEFORE parameterized routes
+router.get("/me", protect, getMyProfile);           // GET /api/profile/me
+router.post("/", protect, saveProfile);             // POST /api/profile/ (not /save)
+router.post("/save", protect, saveProfile);         // POST /api/profile/save (add this for your frontend)
+router.get("/list", listProfiles);                  // GET /api/profile/list
+router.get("/:id", getProfile);                     // GET /api/profile/:id
+router.delete("/", protect, removeProfile);         // DELETE /api/profile/
 
 export default router;

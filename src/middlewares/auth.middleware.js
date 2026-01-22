@@ -4,27 +4,54 @@ import User from "../models/auth.model.js";
 export const protect = async (req, res, next) => {
   let token;
 
+  console.log("🔐 Auth middleware - Route:", req.method, req.originalUrl);
+
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     try {
       token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      req.user = await User.findById(decoded.id).select("-password");
-      if (!req.user) {
-        return res.status(404).json({ message: "User not found" });
+      
+      if (!token) {
+        console.log("❌ Empty token");
+        return res.status(401).json({ 
+          success: false,
+          message: "No token provided" 
+        });
       }
 
+      console.log("🔍 Verifying token...");
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("✅ Token verified for user:", decoded.id);
+
+      req.user = await User.findById(decoded.id).select("-password");
+      
+      if (!req.user) {
+        console.log("❌ User not found");
+        return res.status(404).json({ 
+          success: false,
+          message: "User not found" 
+        });
+      }
+
+      console.log("✅ User authenticated:", req.user._id);
       next();
     } catch (err) {
-      return res.status(401).json({ message: "Invalid or expired token" });
+      console.log("❌ Auth error:", err.message);
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid or expired token" 
+      });
     }
   } else {
-    return res.status(401).json({ message: "No token provided" });
+    console.log("❌ No authorization header");
+    return res.status(401).json({ 
+      success: false,
+      message: "No token provided" 
+    });
   }
 };
 
-// Export as both names for compatibility
+// Export both names for compatibility
 export const authenticate = protect;
