@@ -4,6 +4,11 @@
 .env.development
 .env.production
 .env.test
-node_modules/
-.env
 
+node_modules
+dist
+build
+
+node_modules
+dist
+build
