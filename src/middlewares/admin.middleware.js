@@ -19,7 +19,6 @@ export const requireAdmin = async (req, res, next) => {
       return res.status(401).json({ message: "No token provided" });
     }
   } catch (err) {
-    console.error("Admin auth error:", err);
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };

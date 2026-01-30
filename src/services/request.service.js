@@ -20,7 +20,7 @@ export const sendRequest = async (senderId, receiverId) => {
     if (!sender || !receiver) {
       throw new Error("User not found");
     }
-    // console.log(sender, receiver);
+   
 
     // Check for existing request in either direction
     const existingRequest = await Request.findOne({
@@ -302,7 +302,6 @@ export const getRequestCounts = async (userId) => {
  */
 export const fetchAcceptedConnections = async (userId) => {
   try {
-    console.log("🔗 fetchAcceptedConnections called for userId:", userId);
 
     // Fetch accepted requests where user is either sender or receiver
     const [receivedRequests, sentRequests] = await Promise.all([
@@ -320,8 +319,6 @@ export const fetchAcceptedConnections = async (userId) => {
         .lean(),
     ]);
 
-    console.log("📦 Received Requests:", receivedRequests.length);
-    console.log("📦 Sent Requests:", sentRequests.length);
 
     // Combine and extract the "other user" from each request
     const allConnections = [
@@ -337,10 +334,7 @@ export const fetchAcceptedConnections = async (userId) => {
       })),
     ];
 
-    console.log(
-      "👥 All Connections (before deduplication):",
-      allConnections.length,
-    );
+   
 
     // Deduplicate by user ID
     const uniqueConnections = Array.from(
@@ -349,19 +343,15 @@ export const fetchAcceptedConnections = async (userId) => {
       ).values(),
     );
 
-    console.log("👥 Unique Connections:", uniqueConnections.length);
 
     // ✅ Fetch profile photos for each connection
     const connectionsWithPhotos = await Promise.all(
       uniqueConnections.map(async (user) => {
-        console.log("🔍 Fetching profile for user:", user._id);
 
         const profile = await Profile.findOne({ userId: user._id })
           .select("photos")
           .lean();
 
-        console.log("📸 Profile found:", profile ? "YES" : "NO");
-        console.log("📸 Photos in profile:", profile?.photos?.length || 0);
 
         // ✅ CHANGED: Include pending AND approved photos (exclude only rejected)
         const photos =
@@ -372,7 +362,6 @@ export const fetchAcceptedConnections = async (userId) => {
               isPrimary: p.isPrimary,
             })) || [];
 
-        console.log("✅ Filtered photos count:", photos.length);
 
         return {
           _id: user._id,
@@ -383,14 +372,10 @@ export const fetchAcceptedConnections = async (userId) => {
       }),
     );
 
-    console.log(
-      "✅ Final connections with photos:",
-      connectionsWithPhotos.length,
-    );
+   
 
     return connectionsWithPhotos;
   } catch (error) {
-    console.error("❌ Error in fetchAcceptedConnections:", error);
     throw new Error(error.message || "Failed to fetch connections");
   }
 };

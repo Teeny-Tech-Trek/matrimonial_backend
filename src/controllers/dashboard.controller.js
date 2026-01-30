@@ -18,7 +18,6 @@ export const getDashboardData = async (req, res) => {
       data: dashboardData,
     });
   } catch (error) {
-    console.error("Dashboard controller error:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Internal server error",
@@ -50,7 +49,6 @@ export const getRecommendedProfiles = async (req, res) => {
       data: profiles,
     });
   } catch (error) {
-    console.error("Recommended profiles error:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Internal server error",
@@ -76,7 +74,6 @@ export const getDashboardStats = async (req, res) => {
       data: stats,
     });
   } catch (error) {
-    console.error("Dashboard stats error:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Internal server error",
@@ -94,7 +91,6 @@ export const getQuickFilters = async (req, res) => {
       data: filters,
     });
   } catch (error) {
-    console.error("Quick filters error:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Internal server error",

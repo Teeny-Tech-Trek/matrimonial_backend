@@ -42,7 +42,6 @@ router.post("/upload-image", upload.single("image"), async (req, res) => {
       message: "Image uploaded successfully"
     });
   } catch (error) {
-    console.error("Upload error:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Image upload failed",

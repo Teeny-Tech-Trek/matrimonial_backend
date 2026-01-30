@@ -26,7 +26,6 @@ class DashboardService {
         quickActions: this.getQuickActions(),
       };
     } catch (error) {
-      console.error("❌ Error in getDashboardData:", error);
       throw new Error("Failed to load dashboard data");
     }
   }
@@ -62,7 +61,6 @@ class DashboardService {
         profileCompletion,
       };
     } catch (error) {
-      console.error("Error getting dashboard stats:", error);
       return {
         profileViews: 0,
         interests: 0,
@@ -144,7 +142,6 @@ class DashboardService {
         compatibility: this.calculateCompatibility(userProfile, p),
       }));
     } catch (error) {
-      console.error("Error getting recommended profiles:", error);
       throw new Error("Failed to fetch recommended profiles");
     }
   }
@@ -204,7 +201,6 @@ class DashboardService {
 
       return filters;
     } catch (error) {
-      console.error("Error getting quick filters:", error);
       return [];
     }
   }
