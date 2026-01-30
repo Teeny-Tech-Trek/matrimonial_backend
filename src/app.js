@@ -102,31 +102,20 @@ const app = express();
 // // Handle preflight requests explicitly
 // app.options("*", cors(corsOptions));
 const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      "https://rsaristomatch.com",
-      "https://www.rsaristomatch.com",
-      "http://localhost:5173",
-    ];
-
-    // Allow server-to-server, Postman, curl
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    // ❗ IMPORTANT: don't throw hard error
-    return callback(null, false);
-  },
+  origin: [
+    "https://rsaristomatch.com",
+    "https://www.rsaristomatch.com",
+    "http://localhost:5173",
+  ],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
+// 🔥 THIS IS CRITICAL
+app.options("*", cors(corsOptions));
 
 // Increase payload size limit to handle large data like image uploads
 app.use(express.json({ limit: '50mb' }));
