@@ -112,14 +112,14 @@ app.get("/", (req, res) => {
 });
 
 // Application routes
-app.use("/api/auth", authRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/messages", messageRoutes);
-app.use("/api/request", requestRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api", contactRoutes);
-app.use("/api", uploadRoutes);
+app.use("/backend/auth", authRoutes);
+app.use("/backend/profile", profileRoutes);
+app.use("/backend/messages", messageRoutes);
+app.use("/backend/request", requestRoutes);
+app.use("/backend/dashboard", dashboardRoutes);
+app.use("/backend/admin", adminRoutes);
+app.use("/backend", contactRoutes);
+app.use("/backend", uploadRoutes);
 
 // Error Handling Middlewares
 import { notFound, errorHandler } from './middlewares/error.middleware.js';
