@@ -73,6 +73,34 @@ import uploadRoutes from "./routes/upload.routes.js";
 const app = express();
 
 // CORS configuration to allow multiple origins
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     const allowedOrigins = [
+//       "https://rsaristomatch.com",
+//       "https://www.rsaristomatch.com",
+//       "http://localhost:5173",
+//     ];
+
+//     // Allow requests with no origin (like Postman, mobile apps, etc.)
+//     if (!origin) return callback(null, true);
+
+//     if (allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true,
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+//   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+//   exposedHeaders: ["Content-Range", "X-Content-Range"],
+//   maxAge: 86400, // 24 hours
+// };
+
+// app.use(cors(corsOptions));
+
+// // Handle preflight requests explicitly
+// app.options("*", cors(corsOptions));
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
@@ -81,26 +109,24 @@ const corsOptions = {
       "http://localhost:5173",
     ];
 
-    // Allow requests with no origin (like Postman, mobile apps, etc.)
+    // Allow server-to-server, Postman, curl
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+      return callback(null, true);
     }
+
+    // ❗ IMPORTANT: don't throw hard error
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  exposedHeaders: ["Content-Range", "X-Content-Range"],
-  maxAge: 86400, // 24 hours
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
-
-// Handle preflight requests explicitly
 app.options("*", cors(corsOptions));
+
 
 // Increase payload size limit to handle large data like image uploads
 app.use(express.json({ limit: '50mb' }));
