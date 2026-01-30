@@ -101,20 +101,15 @@ const app = express();
 
 // // Handle preflight requests explicitly
 // app.options("*", cors(corsOptions));
+
 const corsOptions = {
-  origin: [
-    "https://rsaristomatch.com",
-    "https://www.rsaristomatch.com",
-    "http://localhost:5173",
-  ],
+  origin: "https://www.rsaristomatch.com",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
-
-// 🔥 THIS IS CRITICAL
 app.options("*", cors(corsOptions));
 
 // Increase payload size limit to handle large data like image uploads
