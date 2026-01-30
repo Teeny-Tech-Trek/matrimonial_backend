@@ -1,5 +1,6 @@
 import Request from "../models/request.model.js";
 import User from "../models/auth.model.js";
+import Profile from "../models/profile.model.js";
 
 /**
  * Send new connection request
@@ -13,20 +14,20 @@ export const sendRequest = async (senderId, receiverId) => {
     // Check if users exist
     const [sender, receiver] = await Promise.all([
       User.findById(senderId),
-      User.findById(receiverId)
+      User.findById(receiverId),
     ]);
 
     if (!sender || !receiver) {
       throw new Error("User not found");
     }
-    console.log(sender, receiver);
+    // console.log(sender, receiver);
 
     // Check for existing request in either direction
     const existingRequest = await Request.findOne({
       $or: [
         { sender: senderId, receiver: receiverId },
-        { sender: receiverId, receiver: senderId }
-      ]
+        { sender: receiverId, receiver: senderId },
+      ],
     });
 
     if (existingRequest) {
@@ -40,16 +41,22 @@ export const sendRequest = async (senderId, receiverId) => {
     // Calculate compatibility (simple implementation)
     const compatibility = calculateCompatibility(sender, receiver);
 
-    const request = await Request.create({ 
-      sender: senderId, 
+    const request = await Request.create({
+      sender: senderId,
       receiver: receiverId,
-      compatibility 
+      compatibility,
     });
-    
+
     // Populate the request before returning
     const populatedRequest = await Request.findById(request._id)
-      .populate("sender", "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos")
-      .populate("receiver", "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos");
+      .populate(
+        "sender",
+        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
+      )
+      .populate(
+        "receiver",
+        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
+      );
 
     return populatedRequest;
   } catch (error) {
@@ -73,7 +80,8 @@ const calculateCompatibility = (user1, user2) => {
   // Location compatibility (simple check)
   if (user1.location && user2.location) {
     totalFactors++;
-    if (user1.location.toLowerCase() === user2.location.toLowerCase()) score += 25;
+    if (user1.location.toLowerCase() === user2.location.toLowerCase())
+      score += 25;
   }
 
   // Age compatibility
@@ -82,7 +90,7 @@ const calculateCompatibility = (user1, user2) => {
     const age1 = calculateAge(user1.dateOfBirth);
     const age2 = calculateAge(user2.dateOfBirth);
     const ageDiff = Math.abs(age1 - age2);
-    
+
     if (ageDiff <= 2) score += 25;
     else if (ageDiff <= 5) score += 15;
     else score += 5;
@@ -94,7 +102,9 @@ const calculateCompatibility = (user1, user2) => {
     if (user1.profileCreatedFor === user2.profileCreatedFor) score += 25;
   }
 
-  return totalFactors > 0 ? Math.min(Math.round(score / totalFactors), 95) : Math.floor(Math.random() * 30) + 60;
+  return totalFactors > 0
+    ? Math.min(Math.round(score / totalFactors), 95)
+    : Math.floor(Math.random() * 30) + 60;
 };
 
 const calculateAge = (dateOfBirth) => {
@@ -102,11 +112,14 @@ const calculateAge = (dateOfBirth) => {
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
     age--;
   }
-  
+
   return age;
 };
 
@@ -115,22 +128,35 @@ const calculateAge = (dateOfBirth) => {
  */
 export const getReceivedRequests = async (userId) => {
   try {
-    const requests = await Request.find({ receiver: userId, status: { $in: ['pending', 'accepted', 'rejected'] } })
-      .populate("sender", "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos")
-      .populate("receiver", "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos")
+    const requests = await Request.find({
+      receiver: userId,
+      status: { $in: ["pending", "accepted", "rejected"] },
+    })
+      .populate(
+        "sender",
+        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
+      )
+      .populate(
+        "receiver",
+        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
+      )
       .sort({ createdAt: -1 })
       .lean();
 
-    return requests.map(request => ({
+    return requests.map((request) => ({
       ...request,
-      sender: request.sender ? {
-        ...request.sender,
-        _id: request.sender._id.toString()
-      } : null,
-      receiver: request.receiver ? {
-        ...request.receiver,
-        _id: request.receiver._id.toString()
-      } : null
+      sender: request.sender
+        ? {
+            ...request.sender,
+            _id: request.sender._id.toString(),
+          }
+        : null,
+      receiver: request.receiver
+        ? {
+            ...request.receiver,
+            _id: request.receiver._id.toString(),
+          }
+        : null,
     }));
   } catch (error) {
     throw new Error(error.message);
@@ -142,22 +168,35 @@ export const getReceivedRequests = async (userId) => {
  */
 export const getSentRequests = async (userId) => {
   try {
-    const requests = await Request.find({ sender: userId, status: { $in: ['pending', 'accepted', 'rejected'] } })
-      .populate("sender", "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos")
-      .populate("receiver", "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos")
+    const requests = await Request.find({
+      sender: userId,
+      status: { $in: ["pending", "accepted", "rejected"] },
+    })
+      .populate(
+        "sender",
+        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
+      )
+      .populate(
+        "receiver",
+        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
+      )
       .sort({ createdAt: -1 })
       .lean();
 
-    return requests.map(request => ({
+    return requests.map((request) => ({
       ...request,
-      sender: request.sender ? {
-        ...request.sender,
-        _id: request.sender._id.toString()
-      } : null,
-      receiver: request.receiver ? {
-        ...request.receiver,
-        _id: request.receiver._id.toString()
-      } : null
+      sender: request.sender
+        ? {
+            ...request.sender,
+            _id: request.sender._id.toString(),
+          }
+        : null,
+      receiver: request.receiver
+        ? {
+            ...request.receiver,
+            _id: request.receiver._id.toString(),
+          }
+        : null,
     }));
   } catch (error) {
     throw new Error(error.message);
@@ -170,8 +209,14 @@ export const getSentRequests = async (userId) => {
 export const updateRequestStatus = async (requestId, userId, status) => {
   try {
     const request = await Request.findById(requestId)
-      .populate("sender", "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos")
-      .populate("receiver", "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos");
+      .populate(
+        "sender",
+        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
+      )
+      .populate(
+        "receiver",
+        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
+      );
 
     if (!request) {
       throw new Error("Request not found");
@@ -187,14 +232,18 @@ export const updateRequestStatus = async (requestId, userId, status) => {
 
     return {
       ...request.toObject(),
-      sender: request.sender ? {
-        ...request.sender.toObject(),
-        _id: request.sender._id.toString()
-      } : null,
-      receiver: request.receiver ? {
-        ...request.receiver.toObject(),
-        _id: request.receiver._id.toString()
-      } : null
+      sender: request.sender
+        ? {
+            ...request.sender.toObject(),
+            _id: request.sender._id.toString(),
+          }
+        : null,
+      receiver: request.receiver
+        ? {
+            ...request.receiver.toObject(),
+            _id: request.receiver._id.toString(),
+          }
+        : null,
     };
   } catch (error) {
     throw new Error(error.message);
@@ -221,7 +270,7 @@ export const deleteRequest = async (requestId, userId) => {
     }
 
     await Request.findByIdAndDelete(requestId);
-    
+
     return { message: "Request deleted successfully" };
   } catch (error) {
     throw new Error(error.message);
@@ -236,48 +285,112 @@ export const getRequestCounts = async (userId) => {
     const [receivedCount, sentCount, pendingReceivedCount] = await Promise.all([
       Request.countDocuments({ receiver: userId }),
       Request.countDocuments({ sender: userId }),
-      Request.countDocuments({ receiver: userId, status: 'pending' })
+      Request.countDocuments({ receiver: userId, status: "pending" }),
     ]);
 
     return {
       received: receivedCount,
       sent: sentCount,
-      pending: pendingReceivedCount
+      pending: pendingReceivedCount,
     };
   } catch (error) {
     throw new Error(error.message);
   }
 };
-
+/**
+ * ✅ UPDATED: Fetch accepted connections WITH PROFILE PHOTOS (Show pending photos too)
+ */
 export const fetchAcceptedConnections = async (userId) => {
-  const received = await Request.find({
-    receiver: userId,
-    status: "accepted",
-  }).populate("sender", "name avatar");
+  try {
+    console.log("🔗 fetchAcceptedConnections called for userId:", userId);
 
-  const sent = await Request.find({
-    sender: userId,
-    status: "accepted",
-  }).populate("receiver", "name avatar");
+    // Fetch accepted requests where user is either sender or receiver
+    const [receivedRequests, sentRequests] = await Promise.all([
+      Request.find({
+        receiver: userId,
+        status: "accepted",
+      })
+        .populate("sender", "fullName email")
+        .lean(),
+      Request.find({
+        sender: userId,
+        status: "accepted",
+      })
+        .populate("receiver", "fullName email")
+        .lean(),
+    ]);
 
-  // Combine both lists
-  const connections = [
-    ...received.map((req) => ({
-      _id: req.sender._id,
-      name: req.sender.name,
-      avatar: req.sender.avatar,
-    })),
-    ...sent.map((req) => ({
-      _id: req.receiver._id,
-      name: req.receiver.name,
-      avatar: req.receiver.avatar,
-    })),
-  ];
+    console.log("📦 Received Requests:", receivedRequests.length);
+    console.log("📦 Sent Requests:", sentRequests.length);
 
-  // Deduplicate users by ID
-  const uniqueConnections = Array.from(
-    new Map(connections.map((user) => [user._id, user])).values()
-  );
+    // Combine and extract the "other user" from each request
+    const allConnections = [
+      ...receivedRequests.map((req) => ({
+        _id: req.sender._id,
+        fullName: req.sender.fullName,
+        email: req.sender.email,
+      })),
+      ...sentRequests.map((req) => ({
+        _id: req.receiver._id,
+        fullName: req.receiver.fullName,
+        email: req.receiver.email,
+      })),
+    ];
 
-  return uniqueConnections;
+    console.log(
+      "👥 All Connections (before deduplication):",
+      allConnections.length,
+    );
+
+    // Deduplicate by user ID
+    const uniqueConnections = Array.from(
+      new Map(
+        allConnections.map((user) => [user._id.toString(), user]),
+      ).values(),
+    );
+
+    console.log("👥 Unique Connections:", uniqueConnections.length);
+
+    // ✅ Fetch profile photos for each connection
+    const connectionsWithPhotos = await Promise.all(
+      uniqueConnections.map(async (user) => {
+        console.log("🔍 Fetching profile for user:", user._id);
+
+        const profile = await Profile.findOne({ userId: user._id })
+          .select("photos")
+          .lean();
+
+        console.log("📸 Profile found:", profile ? "YES" : "NO");
+        console.log("📸 Photos in profile:", profile?.photos?.length || 0);
+
+        // ✅ CHANGED: Include pending AND approved photos (exclude only rejected)
+        const photos =
+          profile?.photos
+            ?.filter((p) => p.status !== "rejected") // Show pending and approved
+            .map((p) => ({
+              photoUrl: p.photoUrl,
+              isPrimary: p.isPrimary,
+            })) || [];
+
+        console.log("✅ Filtered photos count:", photos.length);
+
+        return {
+          _id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          photos, // ✅ Include photos with photoUrl and isPrimary
+        };
+      }),
+    );
+
+    console.log(
+      "✅ Final connections with photos:",
+      connectionsWithPhotos.length,
+    );
+
+    return connectionsWithPhotos;
+  } catch (error) {
+    console.error("❌ Error in fetchAcceptedConnections:", error);
+    throw new Error(error.message || "Failed to fetch connections");
+  }
 };

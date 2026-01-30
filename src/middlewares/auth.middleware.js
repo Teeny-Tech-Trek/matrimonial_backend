@@ -4,7 +4,7 @@ import User from "../models/auth.model.js";
 export const protect = async (req, res, next) => {
   let token;
 
-  console.log("🔐 Auth middleware - Route:", req.method, req.originalUrl);
+  // console.log("🔐 Auth middleware - Route:", req.method, req.originalUrl);
 
   if (
     req.headers.authorization &&
@@ -21,31 +21,32 @@ export const protect = async (req, res, next) => {
         });
       }
 
-      console.log("🔍 Verifying token...");
+      // console.log("🔍 Verifying token...");
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("✅ Token verified for user:", decoded.id);
+      // console.log("✅ Token verified for user:", decoded.id);
 
       req.user = await User.findById(decoded.id).select("-password");
       
       if (!req.user) {
-        console.log("❌ User not found");
+        // console.log("❌ User not found");
+
         return res.status(404).json({ 
           success: false,
           message: "User not found" 
         });
       }
 
-      console.log("✅ User authenticated:", req.user._id);
+      // console.log("✅ User authenticated:", req.user._id);
       next();
     } catch (err) {
-      console.log("❌ Auth error:", err.message);
+      // console.log("❌ Auth error:", err.message);
       return res.status(401).json({ 
         success: false,
         message: "Invalid or expired token" 
       });
     }
   } else {
-    console.log("❌ No authorization header");
+    // console.log("❌ No authorization header");
     return res.status(401).json({ 
       success: false,
       message: "No token provided" 
