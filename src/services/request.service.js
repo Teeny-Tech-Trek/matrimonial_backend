@@ -2,6 +2,54 @@ import Request from "../models/request.model.js";
 import User from "../models/auth.model.js";
 import Profile from "../models/profile.model.js";
 
+// ─────────────────────────────────────────────
+
+// ─────────────────────────────────────────────
+const attachPhotosToUser = async (user) => {
+  if (!user) return null;
+
+  const profile = await Profile.findOne({ userId: user._id })
+    .select("photos")
+    .lean();
+
+  // rejected photos exclude, pending + approved show karte hain
+  const photos =
+    profile?.photos
+      ?.filter((p) => p.status !== "rejected")
+      .map((p) => ({
+        photoUrl: p.photoUrl,
+        isPrimary: p.isPrimary,
+      })) || [];
+
+  // Primary photo pehle rakho
+  const primaryPhoto = photos.find((p) => p.isPrimary);
+  const profilePhotos = primaryPhoto
+    ? [primaryPhoto.photoUrl, ...photos.filter((p) => !p.isPrimary).map((p) => p.photoUrl)]
+    : photos.map((p) => p.photoUrl);
+
+  return {
+    ...user,
+    _id: user._id.toString(),
+    profilePhotos, // ✅ Frontend expects this field name
+  };
+};
+
+// ─────────────────────────────────────────────
+// Helper: request ke sender + receiver dono pe photos attach karta hai
+// ─────────────────────────────────────────────
+const attachPhotosToRequest = async (request) => {
+  const [sender, receiver] = await Promise.all([
+    attachPhotosToUser(request.sender),
+    attachPhotosToUser(request.receiver),
+  ]);
+
+  return {
+    ...request,
+    sender,
+    receiver,
+  };
+};
+
 /**
  * Send new connection request
  */
@@ -20,7 +68,6 @@ export const sendRequest = async (senderId, receiverId) => {
     if (!sender || !receiver) {
       throw new Error("User not found");
     }
-   
 
     // Check for existing request in either direction
     const existingRequest = await Request.findOne({
@@ -38,7 +85,7 @@ export const sendRequest = async (senderId, receiverId) => {
       }
     }
 
-    // Calculate compatibility (simple implementation)
+    // Calculate compatibility
     const compatibility = calculateCompatibility(sender, receiver);
 
     const request = await Request.create({
@@ -47,18 +94,16 @@ export const sendRequest = async (senderId, receiverId) => {
       compatibility,
     });
 
-    // Populate the request before returning
+    // Populate the request
     const populatedRequest = await Request.findById(request._id)
-      .populate(
-        "sender",
-        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
-      )
-      .populate(
-        "receiver",
-        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
-      );
+      .populate("sender", "fullName gender dateOfBirth profileCreatedFor education occupation location")
+      .populate("receiver", "fullName gender dateOfBirth profileCreatedFor education occupation location")
+      .lean();
 
-    return populatedRequest;
+    // ✅ Profile se photos attach karo
+    const result = await attachPhotosToRequest(populatedRequest);
+
+    return result;
   } catch (error) {
     throw new Error(error.message);
   }
@@ -77,7 +122,7 @@ const calculateCompatibility = (user1, user2) => {
     if (user1.education === user2.education) score += 25;
   }
 
-  // Location compatibility (simple check)
+  // Location compatibility
   if (user1.location && user2.location) {
     totalFactors++;
     if (user1.location.toLowerCase() === user2.location.toLowerCase())
@@ -124,7 +169,7 @@ const calculateAge = (dateOfBirth) => {
 };
 
 /**
- * Get received requests with proper population
+ * ✅ FIXED: Get received requests — Profile se photos attach karte hain
  */
 export const getReceivedRequests = async (userId) => {
   try {
@@ -132,39 +177,24 @@ export const getReceivedRequests = async (userId) => {
       receiver: userId,
       status: { $in: ["pending", "accepted", "rejected"] },
     })
-      .populate(
-        "sender",
-        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
-      )
-      .populate(
-        "receiver",
-        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
-      )
+      .populate("sender", "fullName gender dateOfBirth profileCreatedFor education occupation location")
+      .populate("receiver", "fullName gender dateOfBirth profileCreatedFor education occupation location")
       .sort({ createdAt: -1 })
       .lean();
 
-    return requests.map((request) => ({
-      ...request,
-      sender: request.sender
-        ? {
-            ...request.sender,
-            _id: request.sender._id.toString(),
-          }
-        : null,
-      receiver: request.receiver
-        ? {
-            ...request.receiver,
-            _id: request.receiver._id.toString(),
-          }
-        : null,
-    }));
+    // ✅ Har request pe Profile se photos attach karo
+    const result = await Promise.all(
+      requests.map((request) => attachPhotosToRequest(request))
+    );
+
+    return result;
   } catch (error) {
     throw new Error(error.message);
   }
 };
 
 /**
- * Get sent requests with proper population
+ * ✅ FIXED: Get sent requests — Profile se photos attach karte hain
  */
 export const getSentRequests = async (userId) => {
   try {
@@ -172,57 +202,35 @@ export const getSentRequests = async (userId) => {
       sender: userId,
       status: { $in: ["pending", "accepted", "rejected"] },
     })
-      .populate(
-        "sender",
-        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
-      )
-      .populate(
-        "receiver",
-        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
-      )
+      .populate("sender", "fullName gender dateOfBirth profileCreatedFor education occupation location")
+      .populate("receiver", "fullName gender dateOfBirth profileCreatedFor education occupation location")
       .sort({ createdAt: -1 })
       .lean();
 
-    return requests.map((request) => ({
-      ...request,
-      sender: request.sender
-        ? {
-            ...request.sender,
-            _id: request.sender._id.toString(),
-          }
-        : null,
-      receiver: request.receiver
-        ? {
-            ...request.receiver,
-            _id: request.receiver._id.toString(),
-          }
-        : null,
-    }));
+    // ✅ Har request pe Profile se photos attach karo
+    const result = await Promise.all(
+      requests.map((request) => attachPhotosToRequest(request))
+    );
+
+    return result;
   } catch (error) {
     throw new Error(error.message);
   }
 };
 
 /**
- * Accept or Reject a request
+ * ✅ FIXED: Accept or Reject a request
  */
 export const updateRequestStatus = async (requestId, userId, status) => {
   try {
     const request = await Request.findById(requestId)
-      .populate(
-        "sender",
-        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
-      )
-      .populate(
-        "receiver",
-        "fullName gender dateOfBirth profileCreatedFor education occupation location profilePhotos",
-      );
+      .populate("sender", "fullName gender dateOfBirth profileCreatedFor education occupation location")
+      .populate("receiver", "fullName gender dateOfBirth profileCreatedFor education occupation location");
 
     if (!request) {
       throw new Error("Request not found");
     }
 
-    // Check if user is the receiver of this request
     if (request.receiver._id.toString() !== userId.toString()) {
       throw new Error("Not authorized to update this request");
     }
@@ -230,21 +238,11 @@ export const updateRequestStatus = async (requestId, userId, status) => {
     request.status = status;
     await request.save();
 
-    return {
-      ...request.toObject(),
-      sender: request.sender
-        ? {
-            ...request.sender.toObject(),
-            _id: request.sender._id.toString(),
-          }
-        : null,
-      receiver: request.receiver
-        ? {
-            ...request.receiver.toObject(),
-            _id: request.receiver._id.toString(),
-          }
-        : null,
-    };
+    // ✅ Profile se photos attach karo
+    const plain = request.toObject();
+    const result = await attachPhotosToRequest(plain);
+
+    return result;
   } catch (error) {
     throw new Error(error.message);
   }
@@ -261,7 +259,6 @@ export const deleteRequest = async (requestId, userId) => {
       throw new Error("Request not found");
     }
 
-    // Check if user is either sender or receiver
     if (
       request.sender.toString() !== userId.toString() &&
       request.receiver.toString() !== userId.toString()
@@ -297,13 +294,12 @@ export const getRequestCounts = async (userId) => {
     throw new Error(error.message);
   }
 };
+
 /**
- * ✅ UPDATED: Fetch accepted connections WITH PROFILE PHOTOS (Show pending photos too)
+ * ✅ Fetch accepted connections WITH PROFILE PHOTOS
  */
 export const fetchAcceptedConnections = async (userId) => {
   try {
-
-    // Fetch accepted requests where user is either sender or receiver
     const [receivedRequests, sentRequests] = await Promise.all([
       Request.find({
         receiver: userId,
@@ -319,8 +315,6 @@ export const fetchAcceptedConnections = async (userId) => {
         .lean(),
     ]);
 
-
-    // Combine and extract the "other user" from each request
     const allConnections = [
       ...receivedRequests.map((req) => ({
         _id: req.sender._id,
@@ -334,45 +328,36 @@ export const fetchAcceptedConnections = async (userId) => {
       })),
     ];
 
-   
-
-    // Deduplicate by user ID
+    // Deduplicate
     const uniqueConnections = Array.from(
       new Map(
         allConnections.map((user) => [user._id.toString(), user]),
       ).values(),
     );
 
-
-    // ✅ Fetch profile photos for each connection
+    // ✅ Photos attach karo
     const connectionsWithPhotos = await Promise.all(
       uniqueConnections.map(async (user) => {
-
         const profile = await Profile.findOne({ userId: user._id })
           .select("photos")
           .lean();
 
-
-        // ✅ CHANGED: Include pending AND approved photos (exclude only rejected)
         const photos =
           profile?.photos
-            ?.filter((p) => p.status !== "rejected") // Show pending and approved
+            ?.filter((p) => p.status !== "rejected")
             .map((p) => ({
               photoUrl: p.photoUrl,
               isPrimary: p.isPrimary,
             })) || [];
 
-
         return {
           _id: user._id,
           fullName: user.fullName,
           email: user.email,
-          photos, // ✅ Include photos with photoUrl and isPrimary
+          photos,
         };
       }),
     );
-
-   
 
     return connectionsWithPhotos;
   } catch (error) {
