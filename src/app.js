@@ -126,7 +126,7 @@ app.use(
 );
 
 // IMPORTANT
-app.options("*", cors());
+app.options("/*", cors());
 
 // Increase payload size limit to handle large data like image uploads
 app.use(express.json({ limit: '50mb' }));
