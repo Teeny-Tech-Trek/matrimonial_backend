@@ -7,8 +7,8 @@ dotenv.config();
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
   },
 });
 
@@ -37,7 +37,7 @@ export const sendContactEmail = async ({ name, email, subject, message }) => {
   const sanitizedMessage = validator.escape(message.trim());
 
   const mailOptions = {
-    from: `"${sanitizedName}" <${process.env.EMAIL_USER}>`, // Sender name, but email from EMAIL_USER
+    from: `"${sanitizedName}" <${process.env.MAIL_USER}>`, // Sender name, but email from MAIL_USER
     to: "rsaristomatch@gmail.com", // Destination email
     replyTo: email, // Allows replies to go to the user's email
     subject: `New Contact Form Message: ${sanitizedSubject}`,
