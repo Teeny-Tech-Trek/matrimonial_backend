@@ -50,6 +50,21 @@ export const deleteUser = async (req, res) => {
   }
 };
 
+// ADD THIS - Permanent Delete (remove user completely)
+export const permanentDeleteUser = async (req, res) => {
+  try {
+    const result = await AdminService.permanentDeleteUser(req.params.userId);
+    res.json({ success: true, data: result, message: "User permanently deleted" });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+
+
+
+
+
 // profiles
 export const listProfiles = async (req, res) => {
   try {

@@ -17,6 +17,7 @@ router.get("/users/export", AdminController.exportUsers);
 router.get("/users/:userId", AdminController.getUser);
 router.put("/users/:userId", AdminController.updateUser); // update role / active etc
 router.delete("/users/:userId", AdminController.deleteUser); // soft delete
+router.delete("/users/:userId/permanent", AdminController.permanentDeleteUser);
 
 // Profiles
 router.get("/profiles", AdminController.listProfiles);

@@ -68,10 +68,92 @@ class AdminService {
 
   static async deleteUser(userId) {
     // Soft delete: set isActive false (safer)
-    const user = await User.findByIdAndUpdate(userId, { isActive: false }, { new: true });
+const user = await User.findOneAndUpdate(
+  { _id: userId, isActive: true },
+  { isActive: false },
+  { new: true }
+);
+
+if (!user) throw new Error("User not found or already deleted");
+
     if (!user) throw new Error("User not found");
     return user;
   }
+
+
+static async permanentDeleteUser(userId) {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new Error("Invalid user ID");
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // 1️⃣ Find user first
+    const user = await User.findById(userId).session(session);
+    if (!user) throw new Error("User not found");
+
+    if (user.role === "admin") {
+      throw new Error("Cannot delete admin user");
+    }
+
+    // 2️⃣ Delete profile
+    await Profile.deleteMany({ userId }).session(session);
+
+    // 3️⃣ Delete requests
+    await Request.deleteMany({
+      $or: [{ sender: userId }, { receiver: userId }]
+    }).session(session);
+
+    // 4️⃣ Get conversation IDs
+    const conversationIds = await Conversation
+      .find({ participants: userId })
+      .distinct("_id")
+      .session(session);
+
+    // 5️⃣ Delete messages of those conversations
+    await Message.deleteMany({
+      conversationId: { $in: conversationIds }
+    }).session(session);
+
+    // 6️⃣ Delete conversations
+    await Conversation.deleteMany({
+      participants: userId
+    }).session(session);
+
+    // 7️⃣ Remove references from other users
+    await User.updateMany(
+      {
+        $or: [
+          { connections: userId },
+          { favorites: userId },
+          { blocked: userId }
+        ]
+      },
+      {
+        $pull: {
+          connections: userId,
+          favorites: userId,
+          blocked: userId
+        }
+      }
+    ).session(session);
+
+    // 8️⃣ Finally delete user
+    await User.findByIdAndDelete(userId).session(session);
+
+    await session.commitTransaction();
+    return { userId, deleted: true };
+
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+}
+
 
   // --- Profile moderation
   static async listProfiles({ page = 1, limit = 20, status, search } = {}) {
