@@ -23,6 +23,7 @@ router.delete("/users/:userId/permanent", AdminController.permanentDeleteUser);
 router.get("/profiles", AdminController.listProfiles);
 router.put("/profiles/:profileId/verify", AdminController.verifyProfile);
 router.put("/profiles/:profileId/photos/:photoId/moderate", AdminController.moderatePhoto);
+router.delete("/profiles/:profileId", AdminController.deleteProfile);
 
 // Requests & connections
 router.get("/requests", AdminController.listRequests);

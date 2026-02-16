@@ -110,6 +110,8 @@ class DashboardService {
           },
         },
         { $unwind: "$user" },
+        // Exclude profiles whose user account is deactivated
+        { $match: { "user.isActive": true } },
         {
           $addFields: {
             age: {
@@ -155,8 +157,11 @@ class DashboardService {
       const userProfile = await Profile.findOne({ userId });
       if (!userProfile) return [];
 
+      // Exclude profiles of deactivated users
+      const activeUserIds = await User.find({ isActive: true }).distinct("_id");
+
       const baseCriteria = {
-        userId: { $ne: new mongoose.Types.ObjectId(userId) },
+        userId: { $ne: new mongoose.Types.ObjectId(userId), $in: activeUserIds },
         gender: userProfile.gender === "male" ? "female" : "male",
       };
 

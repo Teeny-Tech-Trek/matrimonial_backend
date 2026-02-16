@@ -1,4 +1,5 @@
 import Profile from "../models/profile.model.js";
+import User from "../models/auth.model.js";
 
 /**
  * Create or Update User Profile
@@ -151,6 +152,10 @@ export const getAllProfiles = async (filters = {}) => {
   // 🧭 Sorting
   const sortBy = filters.sortBy || "createdAt";
   const sortOrder = filters.sortOrder === "asc" ? 1 : -1;
+
+  // Exclude profiles of deactivated users
+  const activeUserIds = await User.find({ isActive: true }).distinct("_id");
+  query.userId = { $in: activeUserIds };
 
   // 🧩 Fetch Profiles
   const profiles = await Profile.find(query)

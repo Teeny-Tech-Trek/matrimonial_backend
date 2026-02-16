@@ -12,11 +12,13 @@ import Message from "../models/message.model.js";
 class AdminService {
   // --- Basic stats for dashboard header
   static async getSiteStats() {
+    // Exclude profiles of deactivated users
+    const activeUserIds = await User.find({ isActive: true }).distinct("_id");
     const [usersCount, activeProfiles, pendingPhotos, requestsCount, conversationsCount] =
       await Promise.all([
         User.countDocuments({}),
-        Profile.countDocuments({}),
-        Profile.countDocuments({ "photos.status": "pending" }),
+        Profile.countDocuments({ userId: { $in: activeUserIds } }),
+        Profile.countDocuments({ "photos.status": "pending", userId: { $in: activeUserIds } }),
         Request.countDocuments({}),
         Conversation.countDocuments({}),
       ]);
@@ -167,6 +169,10 @@ static async permanentDeleteUser(userId) {
       query.$or = [{ fullName: re }, { "familyDetails.currentResidenceCity": re }];
     }
     const skip = (Number(page) - 1) * Number(limit);
+    // Ensure we exclude profiles whose users are deactivated
+    const activeUserIds = await User.find({ isActive: true }).distinct("_id");
+    query.userId = { $in: activeUserIds };
+
     const [data, total] = await Promise.all([
       Profile.find(query).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).populate("userId", "fullName phoneNumber avatar"),
       Profile.countDocuments(query),
@@ -178,6 +184,64 @@ static async permanentDeleteUser(userId) {
     const profile = await Profile.findByIdAndUpdate(profileId, { isVerified: verified }, { new: true });
     if (!profile) throw new Error("Profile not found");
     return profile;
+  }
+
+  // Permanently delete a profile and its related data (requests, conversations, messages, user references)
+  static async deleteProfile(profileId) {
+    if (!mongoose.Types.ObjectId.isValid(profileId)) {
+      throw new Error("Invalid profile ID");
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const profile = await Profile.findById(profileId).session(session);
+      if (!profile) throw new Error("Profile not found");
+
+      const userId = profile.userId;
+
+      // Delete the profile
+      await Profile.findByIdAndDelete(profileId).session(session);
+
+      // Delete requests involving this user
+      await Request.deleteMany({ $or: [{ sender: userId }, { receiver: userId }] }).session(session);
+
+      // Find conversations involving this user
+      const conversationIds = await Conversation.find({ participants: userId }).distinct("_id").session(session);
+
+      // Delete messages in those conversations
+      if (conversationIds && conversationIds.length) {
+        await Message.deleteMany({ conversationId: { $in: conversationIds } }).session(session);
+        await Conversation.deleteMany({ _id: { $in: conversationIds } }).session(session);
+      }
+
+      // Remove references from other users (connections, favorites, blocked)
+      await User.updateMany(
+        {
+          $or: [
+            { connections: userId },
+            { favorites: userId },
+            { blocked: userId }
+          ]
+        },
+        {
+          $pull: {
+            connections: userId,
+            favorites: userId,
+            blocked: userId
+          }
+        }
+      ).session(session);
+
+      await session.commitTransaction();
+      return { profileId, deleted: true };
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   }
 
   // --- Photo moderation

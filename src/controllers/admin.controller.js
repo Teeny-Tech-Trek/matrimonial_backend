@@ -94,6 +94,16 @@ export const moderatePhoto = async (req, res) => {
   }
 };
 
+// Delete profile (permanent) - removes profile and related data
+export const deleteProfile = async (req, res) => {
+  try {
+    const result = await AdminService.deleteProfile(req.params.profileId);
+    res.json({ success: true, data: result, message: "Profile permanently deleted" });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
 // requests
 export const listRequests = async (req, res) => {
   try {
