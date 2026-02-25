@@ -36,7 +36,12 @@ class AdminService {
   static async listUsers({ page = 1, limit = 20, role, search, isActive } = {}) {
     const query = {};
     if (role) query.role = role;
-    if (typeof isActive !== "undefined") query.isActive = isActive === "true" || isActive === true;
+    if (typeof isActive !== "undefined" && isActive !== "") {
+      query.isActive = isActive === "true" || isActive === true;
+    } else {
+      // By default show only active users in admin list.
+      query.isActive = true;
+    }
     if (search) {
       const re = new RegExp(search, "i");
       query.$or = [{ fullName: re }, { phoneNumber: re }];
