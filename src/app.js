@@ -275,7 +275,7 @@ const corsOptions = {
     "http://localhost:5173",
   ],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
@@ -301,6 +301,16 @@ app.use("/backend/dashboard", dashboardRoutes);
 app.use("/backend/admin", adminRoutes);
 app.use("/backend", contactRoutes);
 app.use("/backend", uploadRoutes);
+
+// Local/dev compatibility aliases (keep production paths unchanged)
+app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/request", requestRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api", contactRoutes);
+app.use("/api", uploadRoutes);
 
 // Error Handling Middlewares
 import { notFound, errorHandler } from './middlewares/error.middleware.js';

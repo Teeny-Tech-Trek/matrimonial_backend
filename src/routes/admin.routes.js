@@ -34,4 +34,8 @@ router.get("/conversations", AdminController.listConversations);
 // Quick admin search
 router.get("/search", AdminController.quickSearch);
 
+// Reviews moderation
+router.get("/reviews", AdminController.listReviews);
+router.patch("/reviews/:reviewId/status", AdminController.updateReviewStatus);
+
 export default router;
