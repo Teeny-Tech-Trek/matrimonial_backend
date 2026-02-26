@@ -4,6 +4,7 @@ import {
   getProfileByUserId,
   getAllProfiles,
   deleteProfile,
+  saveSearchPreferences,
 } from "../services/profile.service.js";
 
 /**
@@ -108,5 +109,32 @@ export const removeProfile = async (req, res) => {
     res.status(200).json({ success: true, message: result.message });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
+  }
+};
+
+/**
+ * Save search preferences for logged-in user profile
+ */
+export const updateSearchPreferences = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: "User not authenticated" });
+    }
+
+    const allowed = ["gender", "state", "religion", "maritalStatus", "diet", "ageMin", "ageMax"];
+    const payload = {};
+    for (const key of allowed) {
+      payload[key] = req.body?.[key] || "";
+    }
+
+    const preferences = await saveSearchPreferences(userId, payload);
+    return res.status(200).json({
+      success: true,
+      message: "Search preferences saved",
+      data: preferences,
+    });
+  } catch (err) {
+    return res.status(400).json({ success: false, error: err.message });
   }
 };

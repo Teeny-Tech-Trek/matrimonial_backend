@@ -183,3 +183,17 @@ export const deleteProfile = async (userId) => {
   if (!profile) throw new Error("Profile not found or already deleted");
   return { message: "Profile deleted successfully" };
 };
+
+/**
+ * Save search preferences for a user profile
+ */
+export const saveSearchPreferences = async (userId, preferences = {}) => {
+  const profile = await Profile.findOneAndUpdate(
+    { userId },
+    { $set: { searchPreferences: preferences } },
+    { new: true }
+  );
+
+  if (!profile) throw new Error("Profile not found");
+  return profile.searchPreferences || {};
+};

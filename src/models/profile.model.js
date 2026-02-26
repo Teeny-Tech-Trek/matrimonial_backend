@@ -69,6 +69,16 @@ const subscriptionSchema = new mongoose.Schema({
   expiryDate: Date,
 });
 
+const searchPreferencesSchema = new mongoose.Schema({
+  gender: { type: String, default: "" },
+  state: { type: String, default: "" },
+  religion: { type: String, default: "" },
+  maritalStatus: { type: String, default: "" },
+  diet: { type: String, default: "" },
+  ageMin: { type: String, default: "" },
+  ageMax: { type: String, default: "" },
+}, { _id: false });
+
 const profileSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   fullName: { type: String, required: true },
@@ -82,6 +92,7 @@ const profileSchema = new mongoose.Schema({
   professionalDetails: professionalSchema,
   familyDetails: familySchema,
   lifestylePreferences: lifestyleSchema,
+  searchPreferences: searchPreferencesSchema,
   subscription: subscriptionSchema,
   isVerified: { type: Boolean, default: false },
 }, { timestamps: true });

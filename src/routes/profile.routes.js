@@ -28,6 +28,7 @@ import {
   getMyProfile,
   listProfiles,
   removeProfile,
+  updateSearchPreferences,
 } from "../controllers/profile.controller.js";
 
 const router = express.Router();
@@ -36,6 +37,7 @@ const router = express.Router();
 router.get("/me", protect, getMyProfile);           // GET /api/profile/me
 router.post("/", protect, saveProfile);             // POST /api/profile/ (not /save)
 router.post("/save", protect, saveProfile);         // POST /api/profile/save (add this for your frontend)
+router.patch("/preferences/search", protect, updateSearchPreferences);
 router.get("/list", listProfiles);                  // GET /api/profile/list
 router.get("/:id", getProfile);                     // GET /api/profile/:id
 router.delete("/", protect, removeProfile);         // DELETE /api/profile/
