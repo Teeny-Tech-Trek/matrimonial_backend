@@ -59,7 +59,33 @@ class AdminService {
   static async getUserById(userId) {
     const user = await User.findById(userId).select("-password");
     if (!user) throw new Error("User not found");
-    return user;
+
+    const profile = await Profile.findOne({ userId: user._id }).lean();
+    const profileCompletion = this.calculateProfileCompletionFromProfile(profile);
+
+    return {
+      ...user.toObject(),
+      hasProfile: !!profile,
+      profileCompletion,
+      profileId: profile?._id || null,
+    };
+  }
+
+  static calculateProfileCompletionFromProfile(profile) {
+    if (!profile) return 0;
+
+    let completed = 20;
+    const checks = [
+      profile.personalDetails?.heightCm,
+      profile.religiousDetails?.religion,
+      profile.educationDetails?.highestEducation,
+      profile.professionalDetails?.occupation,
+      profile.familyDetails?.currentResidenceCity,
+      profile.lifestylePreferences?.aboutMe,
+    ];
+
+    completed += checks.filter(Boolean).length * 13;
+    return Math.min(completed, 100);
   }
 
   static async updateUserRole(userId, updates = {}) {
