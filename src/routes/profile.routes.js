@@ -35,6 +35,7 @@ const router = express.Router();
 
 // IMPORTANT: Specific routes BEFORE parameterized routes
 router.get("/me", protect, getMyProfile);           // GET /api/profile/me
+router.get("/my-profile", protect, getMyProfile);   // Backward-compatible alias
 router.post("/", protect, saveProfile);             // POST /api/profile/ (not /save)
 router.post("/save", protect, saveProfile);         // POST /api/profile/save (add this for your frontend)
 router.patch("/preferences/search", protect, updateSearchPreferences);

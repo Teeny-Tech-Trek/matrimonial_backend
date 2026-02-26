@@ -38,7 +38,10 @@ export const getAllProfiles = async (filters = {}) => {
   const query = {};
 
   // 🧍 Basic Filters
-  if (filters.gender) query.gender = filters.gender;
+  if (filters.gender) {
+    const normalizedGender = String(filters.gender).trim();
+    query.gender = { $regex: `^${normalizedGender}$`, $options: "i" };
+  }
   if (filters.maritalStatus)
     query["personalDetails.maritalStatus"] = filters.maritalStatus;
   if (filters.motherTongue)

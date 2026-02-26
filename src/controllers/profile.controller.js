@@ -57,19 +57,18 @@ export const getMyProfile = async (req, res) => {
     }
 
     const profile = await getProfileByUserId(userId);
-    
-    res.status(200).json({ success: true, data: profile });
+    return res.status(200).json({ success: true, data: profile });
   } catch (err) {
-    
-    // If profile doesn't exist, return 404 with helpful message
+    // For users who haven't completed profile yet, return success with null data
     if (err.message === "Profile not found") {
-      return res.status(404).json({ 
-        success: false, 
-        error: "Profile not found. Please create your profile first." 
+      return res.status(200).json({
+        success: true,
+        data: null,
+        message: "Profile not found",
       });
     }
-    
-    res.status(500).json({ success: false, error: err.message });
+
+    return res.status(500).json({ success: false, error: err.message });
   }
 };
 
