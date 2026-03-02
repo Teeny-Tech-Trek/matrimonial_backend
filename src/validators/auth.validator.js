@@ -36,3 +36,22 @@ export const registerValidation = [
     .notEmpty()
     .withMessage("Profile created for is required."),
 ];
+
+export const forgotPasswordValidation = [
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Email must be valid")
+    .normalizeEmail(),
+];
+
+export const resetPasswordValidation = [
+  body("password")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters long"),
+  body("confirmPassword")
+    .custom((value, { req }) => value === req.body.password)
+    .withMessage("Confirm password must match password"),
+];

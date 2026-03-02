@@ -82,6 +82,7 @@ const searchPreferencesSchema = new mongoose.Schema({
 const profileSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   fullName: { type: String, required: true },
+  email: { type: String, required: true, trim: true, lowercase: true },
   gender: { type: String, enum: ["male", "female", "other"], required: true },
   dateOfBirth: { type: Date, required: true },
   profileCreatedFor: { type: String },

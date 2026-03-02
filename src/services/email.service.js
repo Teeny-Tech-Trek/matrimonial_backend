@@ -1,14 +1,13 @@
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
 import validator from "validator"; // For input sanitization
 
-dotenv.config();
-
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: process.env.EMAIL_HOST || process.env.MAIL_HOST || "smtp.gmail.com",
+  port: Number(process.env.EMAIL_PORT || process.env.MAIL_PORT || 587),
+  secure: Number(process.env.EMAIL_PORT || process.env.MAIL_PORT || 587) === 465,
   auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    user: process.env.EMAIL_USER || process.env.MAIL_USER,
+    pass: process.env.EMAIL_PASS || process.env.MAIL_PASS,
   },
 });
 
@@ -71,4 +70,51 @@ ${sanitizedMessage}
   } catch (error) {
     throw new Error("Failed to send email");
   }
+};
+
+export const sendPasswordResetEmail = async ({ toEmail, resetUrl, fullName }) => {
+  if (!toEmail || !resetUrl) {
+    throw new Error("Email and reset URL are required");
+  }
+
+  if (!validator.isEmail(toEmail)) {
+    throw new Error("Invalid recipient email address");
+  }
+
+  const safeName = validator.escape((fullName || "User").trim());
+
+  const mailOptions = {
+    from: `"RSAristoMatch Security" <${process.env.EMAIL_USER || process.env.MAIL_USER}>`,
+    to: toEmail,
+    subject: "Reset your RSAristoMatch password",
+    html: `
+      <div style="font-family:Arial,sans-serif;padding:24px;color:#e2e8f0;">
+        <div style="max-width:600px;margin:0 auto;background:#111827;border:1px solid #374151;border-radius:12px;overflow:hidden;">
+          <div style="padding:20px 24px;border-bottom:1px solid #374151;">
+            <h2 style="margin:0;color:#e2e8f0;">Password Reset Request</h2>
+          </div>
+          <div style="padding:24px;">
+            <p style="margin:0 0 12px;">Hi ${safeName},</p>
+            <p style="margin:0 0 18px;line-height:1.6;color:#cbd5e1;">
+              We received a request to reset your password. Click the button below to create a new password.
+              This link expires in 15 minutes.
+            </p>
+            <a href="${resetUrl}" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">
+              Reset Password
+            </a>
+            <p style="margin:18px 0 0;line-height:1.6;color:#94a3b8;">
+              If the button does not work, copy and paste this link into your browser:
+            </p>
+            <p style="word-break:break-all;color:#a5b4fc;">${resetUrl}</p>
+            <p style="margin-top:18px;line-height:1.6;color:#94a3b8;">
+              If you did not request this, you can safely ignore this email.
+            </p>
+          </div>
+        </div>
+      </div>
+    `,
+    text: `Hi ${safeName}, reset your password using this link (valid for 15 minutes): ${resetUrl}`,
+  };
+
+  await transporter.sendMail(mailOptions);
 };

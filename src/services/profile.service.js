@@ -5,11 +5,27 @@ import User from "../models/auth.model.js";
  * Create or Update User Profile
  */
 export const upsertProfile = async (userId, data) => {
+  if (data?.email) {
+    const existingUser = await User.findOne({
+      email: data.email,
+      _id: { $ne: userId },
+    }).select("_id");
+
+    if (existingUser) {
+      throw new Error("Email is already registered with another account");
+    }
+  }
+
   const profile = await Profile.findOneAndUpdate(
     { userId },
     { $set: data },
     { new: true, upsert: true }
   );
+
+  if (data?.email) {
+    await User.findByIdAndUpdate(userId, { $set: { email: data.email } });
+  }
+
   return profile;
 };
 

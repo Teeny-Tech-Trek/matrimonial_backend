@@ -17,7 +17,18 @@ export const saveProfile = async (req, res) => {
       return res.status(400).json({ success: false, error: "User ID required" });
     }
 
-    const profile = await upsertProfile(userId, req.body);
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      return res.status(400).json({ success: false, error: "Email is required" });
+    }
+    if (!emailPattern.test(email)) {
+      return res.status(400).json({ success: false, error: "Invalid email format" });
+    }
+
+    const payload = { ...req.body, email };
+
+    const profile = await upsertProfile(userId, payload);
     res.status(200).json({
       success: true,
       message: "Profile saved successfully",
